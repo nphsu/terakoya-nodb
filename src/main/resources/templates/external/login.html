@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Insert title here</title>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"></link>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="js/common.js"></script>
+
+    <!-- Bootstrap Material Design (https://github.com/FezVrasta/bootstrap-material-design) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/roboto.min.css"></link>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/material-fullpalette.min.css"></link>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/ripples.min.css"></link>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/material.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/ripples.min.js"></script>
+<style>
+body {
+	padding-top: 70px;
+}
+</style>
+
+<script>
+	$.material.init();
+</script>
+</head>
+<body>
+<script>
+function statusChangeCallback(response) {
+  console.log('statusChangeCallback');
+  console.log(response);
+  // The response object is returned with a status field that lets the
+  // app know the current login status of the person.
+  // Full docs on the response object can be found in the documentation
+  // for FB.getLoginStatus().
+  if (response.status === 'connected') {
+    // Logged into your app and Facebook.
+    testAPI(response.authResponse.userID);
+  } else if (response.status === 'not_authorized') {
+    // The person is logged into Facebook, but not your app.
+    document.getElementById('status').innerHTML = 'Please log ' +
+      'into this app.';
+  } else {
+    // The person is not logged into Facebook, so we're not sure if
+    // they are logged into this app or not.
+    document.getElementById('status').innerHTML = 'Please log ' +
+      'into Facebook.';
+  }
+}
+
+//This function is called when someone finishes with the Login
+// Button.  See the onlogin handler attached to it in the sample
+// code below.
+function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+  });
+}
+
+//Here we run a very simple test of the Graph API after login is
+// successful.  See statusChangeCallback() for when this call is made.
+function testAPI(userID) {
+	var json = new Object();
+	console.log(userID);
+	console.log('Welcome!  Fetching your information.... ');
+	FB.api('/me', {locale: 'ja_JP', fields: 'name, email, gender, birthday'}, function(response) {
+		document.getElementById('status').innerHTML =
+		'Thanks for logging in, ' + response.name + '!';
+		json.email = response.email;
+		json.gender = response.gender;
+		json.birthday = response.birthday;
+		json.fullName = response.name;
+		FB.api("/" + userID + "/picture", function (response) {
+			document.getElementById('status').innerHTML = response.data.url;
+			$("#profile").children("img").attr({'src':response.data.url});
+			json.profileImage = response.data.url;
+		});
+
+		$.ajax({
+			url: "http://localhost:5000/login/ajax",
+			type : 'POST',
+			dataType : 'json',
+			data : {
+				"facebookInfo" : JSON.stringify(json),
+			},
+			timeout : 1000,
+			success: function (data) {
+				console.log("success: " + data);
+				var form = document.createElement('form');
+				form.action = "/login/" + data;
+				form.method = 'get';
+				document.body.appendChild(form);
+				form.submit();
+			},
+			error : function(data) {
+				console.log("error: " + data);
+			}
+		});
+	});
+}
+
+window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '703763739791620',
+      xfbml      : true,
+      version    : 'v2.8'
+    });
+};
+
+(function(d, s, id){
+   var js, fjs = d.getElementsByTagName(s)[0];
+   if (d.getElementById(id)) {return;}
+   js = d.createElement(s); js.id = id;
+   js.src = "//connect.facebook.net/en_US/sdk.js";
+   fjs.parentNode.insertBefore(js, fjs);
+ }(document, 'script', 'facebook-jssdk'));
+</script>
+	<div class="navbar navbar-fixed-top">
+		<div class="container-fluid">
+			<div class="nabar-header">
+				<div class="col-sm-3 col-xs-6"><button class="btn btn-raised btn-primary btn-block" onclick="moveTop2();">トップページに戻る</button></div>
+			</div>
+		</div>
+	</div>
+<form method="post" action="/login" th:object="${loginForm}">
+	<div class="form-group label-floating">
+    	<label class="control-label" for="focusedInput">LoginID</label>
+    	<input class="form-control" id="loginId" name="loginId" type="text" th:field="*{loginId}"/>
+    	<p class="help-block">You should really write LoginID</p>
+	</div>
+	<div class="form-group label-floating">
+    	<label class="control-label" for="focusedInput">Password</label>
+    	<input class="form-control" id="password" name="password" type="password" th:field="*{password}"/>
+    	<p class="help-block">You should really write password</p>
+	</div>
+	<input type="submit" value="ログイン" name="login" class="btn btn-raised btn-primary"/>
+</form>
+<fb:login-button scope="public_profile,email,user_birthday" onlogin="checkLoginState();">
+</fb:login-button>
+<div id="status"></div>
+<div id="profile"><img/></div>
+</body>
+</html>

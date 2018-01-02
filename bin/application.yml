@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: dev
+  thymeleaf:
+    cache: false
+
+security:
+  basic:
+    enabled: false
+
+server:
+  port: 5000
+  
+terakoya:
+  api:
+    defaultProfileImage: 'images/no-user-image.jpg'
+    defaultBackImage: 'https://scontent-nrt1-1.xx.fbcdn.net/v/t1.0-9/11174970_801763536586270_8043279978391288271_n.jpg?oh=59306241a54252974982e5cf4778d828&oe=5901184E'
